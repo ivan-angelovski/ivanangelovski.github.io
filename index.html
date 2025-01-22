@@ -94,11 +94,11 @@
                const Graph = ForceGraph3D()
                    (document.getElementById('3d-graph'))
                    .graphData(graphData)
-                   .linkColor(() => 'rgba(0,0,0,0.2)')
+                   .linkColor(() => 'rgba(0,0,0,1)')
                    .linkWidth(1)
                    .linkDirectionalArrowLength(3.5)
                    .nodeColor(node => {
-                       return highlightedNodes[node.id] || 'rgba(200,200,200,0.2)';
+                       return highlightedNodes[node.id] || 'rgba(200,200,200,1)';
                    })
                    .nodeRelSize(node => {
                        return highlightedNodes[node.id] ? 8 : 4;
