@@ -42,7 +42,7 @@
     <script src="//unpkg.com/3d-force-graph"></script>
 </head>
 <body>
-    <button class="nav-button" id="navigate-button">Next</button>
+    <button class="nav-button" id="navigate-button">Next View</button>
     <div id="3d-graph"></div>
 
     <script>
@@ -121,10 +121,11 @@
                     const targetNode = data.nodes.find(node => node.id === targetNodeId);
 
                     if (targetNode) {
+                        // Zoom in on the selected node
                         graph.cameraPosition(
                             { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 + 200 }, // New position with zoom
                             { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 }, // Look-at position
-                            2000 // Animation duration in ms
+                            1000 // Animation duration in ms
                         );
                     }
                 });
