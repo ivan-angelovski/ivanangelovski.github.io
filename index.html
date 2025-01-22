@@ -46,7 +46,7 @@
 
                     // Adjust node size and color for highlighted nodes
                     graph.nodeColor(node => highlightNodes.includes(node.id) ? 'red' : 'black');
-                    graph.nodeRelSize(node => highlightNodes.includes(node.id) ? 3 : 1);  // Larger size for highlighted nodes
+                    graph.nodeRelSize(node => highlightNodes.includes(node.id) ? 5 : 1);  // Slightly larger size for highlighted nodes
                 })
                 .catch(error => {
                     console.error("Error loading the network data:", error);
