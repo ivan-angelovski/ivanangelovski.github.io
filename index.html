@@ -34,11 +34,11 @@
     <script src="https://unpkg.com/3d-force-graph"></script>
 </head>
 <body>
-    <button class="nav-button" id="navigate-button">Next</button>
+    <button class="nav-button" id="navigate-button">Next View</button>
     <div id="3d-graph"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', function () {
             const navigateButton = document.getElementById('navigate-button');
             if (!navigateButton) {
                 console.error("Navigate button not found!");
@@ -55,6 +55,7 @@
             let currentViewIndex = -1;
             let graph;
 
+            // Fetch network data and initialize the graph
             fetch('./network_data.json')
                 .then(res => res.json())
                 .then(data => {
@@ -72,25 +73,17 @@
                         .d3Force('charge', d3.forceManyBody().strength(-100))
                         .d3Force('link', d3.forceLink().distance(100));
 
-                    // Highlight nodes with labels
-                    graph.nodeCanvasObject((node, ctx, globalScale) => {
-                        if (highlightNodes.includes(node.id)) {
-                            ctx.font = `${Math.max(8, 12 / globalScale)}px sans-serif`;
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillStyle = 'black';
-                            ctx.fillText(node.id, node.x, node.y);
-                        }
-                    });
+                    // Highlight nodes by adding labels
+                    graph.nodeLabel(node => highlightNodes.includes(node.id) ? node.id : '');
 
-                    // "Next View" button logic
+                    // Button logic for "Next View"
                     navigateButton.addEventListener('click', () => {
                         currentViewIndex = (currentViewIndex + 1) % highlightNodes.length;
                         const targetNodeId = highlightNodes[currentViewIndex];
                         const targetNode = data.nodes.find(node => node.id === targetNodeId);
 
                         if (targetNode) {
-                            // Zoom in on the selected node
+                            // Zoom into the selected node
                             graph.cameraPosition(
                                 { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 + 200 }, // New position with zoom
                                 { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 }, // Look-at position
