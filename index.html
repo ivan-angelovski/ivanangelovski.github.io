@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -32,13 +31,6 @@
     <div id="node-info" class="node-label"></div>
 
     <script>
-          document.addEventListener('DOMContentLoaded', function () {
-            const highlightNodes = [
-                "currentglobalnews.site",
-                "276 Tiffin St, Barrie, ON, L4N-2N4, CA",
-                "Amsterdam, North Holland, NH, The Netherlands, NL",
-                "beget.com"
-            ];
         const nodeInfo = document.getElementById('node-info');
         
         fetch('./network_data.json')
@@ -52,8 +44,8 @@
                     .linkWidth(1)
                     .linkDirectionalArrowLength(0)
                     // Invisible nodes
-                    .nodeColor(node => highlightNodes.includes(node.id) ? 'red' : 'black')
-                    .nodeRelSize(node => highlightNodes.includes(node.id) ? 10 : 5) // Larger size for highlighted nodes
+                    .nodeColor(() => 'rgba(0,0,0,1)')
+                    .nodeRelSize(1)
                     // White background
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
