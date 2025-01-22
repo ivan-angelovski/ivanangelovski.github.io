@@ -41,6 +41,8 @@
         }
     </style>
     <script src="//unpkg.com/3d-force-graph"></script>
+    <script src="//unpkg.com/three"></script>
+    <script src="//unpkg.com/three/examples/js/renderers/CSS2DRenderer.js"></script>
 </head>
 <body>
     <button class="nav-button" id="navigate-button">Next View</button>
@@ -51,7 +53,6 @@
         const nodeInfo = document.getElementById('node-info');
         const navigateButton = document.getElementById('navigate-button');
 
-        // Reordered array according to the requested sequence
         const highlightNodes = [
             "currentglobalnews.site",
             "276 Tiffin St, Barrie, ON, L4N-2N4, CA",
@@ -60,66 +61,60 @@
         ];
 
         let currentViewIndex = -1;
+        let Graph;
 
         fetch('./network_data.json')
             .then(res => res.json())
             .then(data => {
-                const Graph = ForceGraph3D()
+                Graph = ForceGraph3D()
                     (document.getElementById('3d-graph'))
                     .graphData(data)
                     .linkColor(() => 'rgba(0,0,0,1)')
                     .linkWidth(1)
                     .linkDirectionalArrowLength(0)
-                    .nodeColor(node => highlightNodes.includes(node.id) ? '#FF4500' : 'black') // Highlight important nodes
-                    .nodeLabel(node => node.id)
-                    .nodeRelSize(node => highlightNodes.includes(node.id) ? 2.5 : 1.5) // Larger size for highlighted nodes
+                    .nodeColor(node => highlightNodes.includes(node.id) ? '#FF4500' : 'black')
+                    .nodeRelSize(node => highlightNodes.includes(node.id) ? 2.5 : 1.5)
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
                     .d3Force('charge').strength(-100)
                     .d3Force('link').distance(100)
+                    .nodeThreeObjectExtend(true)
                     .nodeThreeObject(node => {
-                        if (highlightNodes.includes(node.id)) {
-                            const nodeEl = document.createElement('div');
-                            nodeEl.textContent = node.id;
-                            nodeEl.style.color = 'black';
-                            nodeEl.style.background = 'rgba(255, 255, 255, 0.9)';
-                            nodeEl.style.padding = '4px 8px';
-                            nodeEl.style.borderRadius = '4px';
-                            nodeEl.style.fontSize = '12px';
-                            nodeEl.style.fontWeight = 'bold';
-                            nodeEl.style.border = '1px solid rgba(0,0,0,0.2)';
-                            nodeEl.style.pointerEvents = 'none';
-                            return new THREE.CSS2DObject(nodeEl);
-                        }
-                        return null;
+                        const sprite = new SpriteText(node.id);
+                        sprite.color = 'black';
+                        sprite.textHeight = highlightNodes.includes(node.id) ? 8 : 4;
+                        sprite.backgroundColor = highlightNodes.includes(node.id) ? 'rgba(255,255,255,0.9)' : 'transparent';
+                        sprite.padding = 2;
+                        sprite.borderRadius = 3;
+                        sprite.borderWidth = highlightNodes.includes(node.id) ? 1 : 0;
+                        sprite.borderColor = 'rgba(0,0,0,0.2)';
+                        return sprite;
                     });
 
-                // Add CSS2D renderer for the labels
-                const labelRenderer = new THREE.CSS2DRenderer();
-                labelRenderer.setSize(window.innerWidth, window.innerHeight);
-                labelRenderer.domElement.style.position = 'absolute';
-                labelRenderer.domElement.style.top = '0px';
-                labelRenderer.domElement.style.pointerEvents = 'none';
-                document.body.appendChild(labelRenderer.domElement);
-
-                // Handle window resize
-                window.addEventListener('resize', () => {
-                    labelRenderer.setSize(window.innerWidth, window.innerHeight);
-                });
-
+                // Navigation button functionality
                 navigateButton.addEventListener('click', () => {
                     currentViewIndex = (currentViewIndex + 1) % highlightNodes.length;
                     const targetNodeId = highlightNodes[currentViewIndex];
                     const targetNode = data.nodes.find(node => node.id === targetNodeId);
-
+                    
                     if (targetNode) {
+                        const distance = 200;
+                        const distRatio = 1 + distance/Math.hypot(targetNode.x, targetNode.y, targetNode.z);
+
                         Graph.cameraPosition(
-                            { x: targetNode.x || 0, y: targetNode.y || 0, z: (targetNode.z || 0) + 200 }, // New position
-                            { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 }, // Look-at position
-                            3000 // Animation duration in ms
+                            {
+                                x: targetNode.x * distRatio,
+                                y: targetNode.y * distRatio,
+                                z: targetNode.z * distRatio
+                            },
+                            targetNode,
+                            2000
                         );
                     }
                 });
+
+                // Trigger first view
+                navigateButton.click();
             });
     </script>
 </body>
