@@ -69,7 +69,7 @@
                     .linkColor(() => 'rgba(0,0,0,1)')
                     .linkWidth(1)
                     .linkDirectionalArrowLength(0)
-                    .nodeColor(() => 'blue') // All nodes are blue
+                    .nodeColor(() => 'black') // All nodes are black
                     .nodeLabel(node => node.id) // Show labels on hover
                     .nodeRelSize(1.5) // Uniform node size
                     .backgroundColor('#ffffff')
@@ -98,8 +98,8 @@
 
                     if (targetNode) {
                         Graph.cameraPosition(
-                            { x: targetNode.x, y: targetNode.y, z: targetNode.z + 200 }, // New position
-                            targetNode, // Look-at position
+                            { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 + 200 }, // New position
+                            { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 }, // Look-at position
                             3000 // Animation duration in ms
                         );
                     }
