@@ -11,22 +11,6 @@
             width: 100vw;
             height: 100vh;
         }
-        .nav-button {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            padding: 10px 15px;
-            background: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            z-index: 1000;
-        }
-        .nav-button:hover {
-            background: #0056b3;
-        }
     </style>
     <!-- Include D3.js library -->
     <script src="https://d3js.org/d3.v6.min.js"></script>
@@ -34,17 +18,10 @@
     <script src="https://unpkg.com/3d-force-graph"></script>
 </head>
 <body>
-    <button class="nav-button" id="navigate-button">Next View</button>
     <div id="3d-graph"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const navigateButton = document.getElementById('navigate-button');
-            if (!navigateButton) {
-                console.error("Navigate button not found!");
-                return;
-            }
-
             const highlightNodes = [
                 "currentglobalnews.site",
                 "276 Tiffin St, Barrie, ON, L4N-2N4, CA",
@@ -52,45 +29,24 @@
                 "beget.com"
             ];
 
-            let currentViewIndex = -1;
-            let graph;
-
             // Fetch network data and initialize the graph
             fetch('./network_data.json')
                 .then(res => res.json())
                 .then(data => {
-                    graph = ForceGraph3D()
+                    const graph = ForceGraph3D()
                         (document.getElementById('3d-graph'))
                         .graphData(data)
                         .linkColor(() => 'rgba(0,0,0,1)')
                         .linkWidth(1)
                         .linkDirectionalArrowLength(0)
-                        .nodeColor(() => 'black')
-                        .nodeLabel(node => node.id)  // Label based on node ID
                         .nodeRelSize(1.5)
                         .backgroundColor('#ffffff')
                         .showNavInfo(false)
                         .d3Force('charge', d3.forceManyBody().strength(-100))
                         .d3Force('link', d3.forceLink().distance(100));
 
-                    // Highlight nodes by adding labels
-                    graph.nodeLabel(node => highlightNodes.includes(node.id) ? node.id : '');
-
-                    // Button logic for "Next View"
-                    navigateButton.addEventListener('click', () => {
-                        currentViewIndex = (currentViewIndex + 1) % highlightNodes.length;
-                        const targetNodeId = highlightNodes[currentViewIndex];
-                        const targetNode = data.nodes.find(node => node.id === targetNodeId);
-
-                        if (targetNode) {
-                            // Zoom into the selected node
-                            graph.cameraPosition(
-                                { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 + 200 }, // New position with zoom
-                                { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 }, // Look-at position
-                                1000 // Animation duration in ms
-                            );
-                        }
-                    });
+                    // Highlight specified nodes by coloring them red
+                    graph.nodeColor(node => highlightNodes.includes(node.id) ? 'red' : 'black');
                 })
                 .catch(error => {
                     console.error("Error loading the network data:", error);
