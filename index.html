@@ -1,9 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network Visualization</title>
+    <style>
+        body { 
+            margin: 0; 
+            background: #ffffff;
+        }
+        canvas { 
+            width: 100vw; 
+            height: 100vh; 
+        }
+        .node-label {
+            color: black;
+            background: rgba(255,255,255,1);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.2);
+            font-size: 12px;
+            pointer-events: none;
+            position: absolute;
+            display: none;
+            font-family: monospace;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+    </style>
+    <!-- Change to https -->
+    <script src="https://unpkg.com/3d-force-graph"></script>
+</head>
 <body>
     <div id="3d-graph"></div>
     <div id="node-info" class="node-label"></div>
 
     <script>
-        // Put the code here, replacing your existing code:
         const nodeInfo = document.getElementById('node-info');
         const highlightedNodes = [
             'currentglobalnews.site',
@@ -12,12 +42,10 @@
             'beget.com'
         ];
 
-        // Define moveLabel function before fetch
         function moveLabel(event) {
             const x = event.pageX + 10;
             const y = event.pageY + 10;
             
-            // Keep the label within the window bounds
             const labelWidth = nodeInfo.offsetWidth;
             const labelHeight = nodeInfo.offsetHeight;
             const windowWidth = window.innerWidth;
@@ -27,55 +55,69 @@
             nodeInfo.style.top = Math.min(y, windowHeight - labelHeight - 10) + 'px';
         }
 
+        // Add error handling
         fetch('./network_data.json')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                return res.json();
+            })
             .then(data => {
+                console.log('Data loaded:', data); // Debug log
+                
+                if (!data || !data.nodes || !data.links) {
+                    throw new Error('Invalid data format');
+                }
+
                 const Graph = ForceGraph3D()
                     (document.getElementById('3d-graph'))
                     .graphData(data)
-                    // Make links visible with black lines
                     .linkColor(() => 'rgba(0,0,0,0.2)')
                     .linkWidth(0.5)
                     .linkDirectionalArrowLength(3)
-                    // Make nodes visible and color them based on highlight status
                     .nodeColor(node => highlightedNodes.includes(node.id) ? '#FF0000' : '#666666')
                     .nodeRelSize(4)
-                    // White background
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
-                    // Forces
-                    .d3Force('charge').strength(-120)
-                    .d3Force('link').distance(80)
-                    // Hover effects
-                    .onNodeHover(node => {
-                        if (node) {
-                            const links = data.links.filter(link => 
-                                link.source.id === node.id || link.target.id === node.id
-                            );
-                            
-                            const linkedNodes = links.reduce((acc, link) => {
-                                acc.add(link.source.id);
-                                acc.add(link.target.id);
-                                return acc;
-                            }, new Set());
+                    .d3Force('charge').strength(-120);
 
-                            nodeInfo.innerHTML = `
-                                <strong>${node.id}</strong><br>
-                                <small>Type: ${node.type || 'Unknown'}</small>
-                                ${links.length > 0 ? '<br><br>Connected to:' : ''}
-                                ${Array.from(linkedNodes)
-                                    .filter(id => id !== node.id)
-                                    .map(id => `<br>→ ${id}`)
-                                    .join('')}
-                            `;
-                            nodeInfo.style.display = 'block';
-                            
-                            document.addEventListener('mousemove', moveLabel);
-                        } else {
-                            nodeInfo.style.display = 'none';
-                            document.removeEventListener('mousemove', moveLabel);
-                        }
-                    });
+                Graph.d3Force('link').distance(80);
+
+                Graph.onNodeHover(node => {
+                    if (node) {
+                        const links = data.links.filter(link => 
+                            link.source.id === node.id || link.target.id === node.id
+                        );
+                        
+                        const linkedNodes = links.reduce((acc, link) => {
+                            acc.add(link.source.id);
+                            acc.add(link.target.id);
+                            return acc;
+                        }, new Set());
+
+                        nodeInfo.innerHTML = `
+                            <strong>${node.id}</strong><br>
+                            <small>Type: ${node.type || 'Unknown'}</small>
+                            ${links.length > 0 ? '<br><br>Connected to:' : ''}
+                            ${Array.from(linkedNodes)
+                                .filter(id => id !== node.id)
+                                .map(id => `<br>→ ${id}`)
+                                .join('')}
+                        `;
+                        nodeInfo.style.display = 'block';
+                        
+                        document.addEventListener('mousemove', moveLabel);
+                    } else {
+                        nodeInfo.style.display = 'none';
+                        document.removeEventListener('mousemove', moveLabel);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading or processing data:', error);
+                document.getElementById('3d-graph').innerHTML = 'Error loading visualization: ' + error.message;
             });
     </script>
 </body>
+</html>
