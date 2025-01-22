@@ -37,9 +37,9 @@
                 .then(data => {
                     // Make sure each node has x, y, z properties, otherwise set default values
                     data.nodes.forEach(node => {
-                        if (node.x === undefined) node.x = Math.random() * 500 - 250; // Set random position if not available
-                        if (node.y === undefined) node.y = Math.random() * 500 - 250;
-                        if (node.z === undefined) node.z = Math.random() * 500 - 250;
+                        if (node.x === undefined || isNaN(node.x)) node.x = Math.random() * 500 - 250; // Set random position if not available or NaN
+                        if (node.y === undefined || isNaN(node.y)) node.y = Math.random() * 500 - 250;
+                        if (node.z === undefined || isNaN(node.z)) node.z = Math.random() * 500 - 250;
                     });
 
                     const graph = ForceGraph3D()
@@ -57,12 +57,4 @@
                         .d3Force('link', d3.forceLink().distance(100));
 
                     // Optional: Log node positions to ensure they have valid values
-                    console.log("Node positions:", data.nodes);
-                })
-                .catch(error => {
-                    console.error("Error loading the network data:", error);
-                });
-        });
-    </script>
-</body>
-</html>
+  
