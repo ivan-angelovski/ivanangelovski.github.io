@@ -42,12 +42,11 @@
     <script src="//unpkg.com/3d-force-graph"></script>
 </head>
 <body>
-    <button class="nav-button" id="navigate-button">Next View</button>
+    <button class="nav-button" id="navigate-button">Next</button>
     <div id="3d-graph"></div>
 
     <script>
         const navigateButton = document.getElementById('navigate-button');
-
         const highlightNodes = [
             "currentglobalnews.site",
             "276 Tiffin St, Barrie, ON, L4N-2N4, CA",
@@ -85,8 +84,8 @@
                             nodeEl.style.fontSize = '12px';
                             nodeEl.style.fontWeight = 'bold';
                             nodeEl.style.position = 'absolute';
-                            nodeEl.style.pointerEvents = 'none'; // Disable interactions with the label
-                            
+                            nodeEl.style.pointerEvents = 'none';
+
                             // Create and add label as a permanent element in the scene
                             const label = new THREE.CSS2DObject(nodeEl);
                             label.position.set(node.x, node.y, node.z); // Set label position to the node's coordinates
@@ -94,6 +93,26 @@
                         }
                         return null; // Avoid replacing the default 3D node visualization
                     });
+
+                // Ensure permanent labels for highlighted nodes
+                data.nodes.forEach(node => {
+                    if (highlightNodes.includes(node.id)) {
+                        const nodeEl = document.createElement('div');
+                        nodeEl.textContent = node.id;
+                        nodeEl.style.color = 'black';
+                        nodeEl.style.background = 'white';
+                        nodeEl.style.padding = '2px 5px';
+                        nodeEl.style.borderRadius = '3px';
+                        nodeEl.style.fontSize = '12px';
+                        nodeEl.style.fontWeight = 'bold';
+                        nodeEl.style.position = 'absolute';
+                        nodeEl.style.pointerEvents = 'none';
+
+                        const label = new THREE.CSS2DObject(nodeEl);
+                        label.position.set(node.x, node.y, node.z); // Position label at node coordinates
+                        graph.scene().add(label);
+                    }
+                });
 
                 // Handle the "Next View" button functionality
                 navigateButton.addEventListener('click', () => {
