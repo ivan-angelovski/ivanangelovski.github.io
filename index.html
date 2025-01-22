@@ -80,14 +80,27 @@
                     .nodeRelSize(4)
                     .backgroundColor('#ffffff')
                     .showNavInfo(true)
-                  // Increase the repulsion between nodes
                     .d3Force('charge', d3.forceManyBody().strength(-200))
-                    // Add a 3D center force
-                    .d3Force('center', d3.forceCenter())
-                    // Add a z-force to spread nodes in the z-direction
-                    .d3Force('z', d3.forceZ().strength(0.05))
-                    // Increase link distance
                     .d3Force('link', d3.forceLink().distance(100))
+                    .d3Force('center', d3.forceCenter())
+                    // Add custom 3D force
+                    .d3Force('3d', () => {
+                        data.nodes.forEach(node => {
+                            if (!node.z) node.z = (Math.random() - 0.5) * 200;
+                        });
+                    })
+                    // Initialize with 3D positions
+                    .graphData({
+                        nodes: data.nodes.map(node => ({
+                            ...node,
+                            x: Math.random() * 200 - 100,
+                            y: Math.random() * 200 - 100,
+                            z: Math.random() * 200 - 100
+                        })),
+                        links: data.links
+                    });
+
+                
                     .onNodeHover(node => {
                         if (node) {
                             const links = data.links.filter(link => 
