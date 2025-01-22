@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Network Visualization</title>
+    <title>Network Visualization - Highlighted Nodes</title>
     <style>
         body { 
             margin: 0; 
-            background: #9e5454;
+            background: #ffffff;
             font-family: Arial, sans-serif;
         }
         canvas { 
@@ -13,15 +13,37 @@
             height: 100vh; 
         }
         .node-label {
-            color: rgb(0, 0, 0);
-            background: rgba(255,255,255,0.8);
+            color: black;
+            background: rgba(255,255,255,0.9);
             padding: 8px;
             border-radius: 4px;
-            border: 1px solid rgba(255,255,255,0.2);
-            font-size: 14px;
+            border: 1px solid rgba(0,0,0,0.2);
+            font-size: 12px;
             pointer-events: none;
             position: absolute;
             display: none;
+            font-family: monospace;
+        }
+        .legend {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.2);
+            font-size: 12px;
+        }
+        .legend-item {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid rgba(0,0,0,0.2);
         }
     </style>
     <script src="//unpkg.com/3d-force-graph"></script>
@@ -29,70 +51,73 @@
 <body>
     <div id="3d-graph"></div>
     <div id="node-info" class="node-label"></div>
+    <div class="legend">
+        <div class="legend-item">
+            <div class="color-box" style="background: #FF6B6B;"></div>
+            <div>currentglobalnews.site</div>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #4ECDC4;"></div>
+            <div>Barrie Location</div>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #45B7D1;"></div>
+            <div>Amsterdam Location</div>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #96CEB4;"></div>
+            <div>beget.com</div>
+        </div>
+    </div>
+
     <script>
         const nodeInfo = document.getElementById('node-info');
         
-        fetch('./network_data.json')
-            .then(res => res.json())
-            .then(data => {
-                const Graph = ForceGraph3D()
-                    (document.getElementById('3d-graph'))
-                    .graphData(data)
-                    .linkColor(() => 'rgba(0,0,0,1)')
-                    .linkWidth(0.5)
-                    .linkDirectionalArrowLength(0)
-                    .nodeColor(node => {
-                        // List of nodes to highlight in red
-                        const redNodes = ['currentglobalnews.site', 'Barrie', 'Amsterdam', 'Beget.com'];
-                        return redNodes.includes(node.id) ? '#FF0000' : 'rgba(0,0,0,1)';
-                    })
-                    .nodeRelSize(node => {
-                        // Make highlighted nodes larger
-                        const redNodes = ['currentglobalnews.site', 'Barrie', 'Amsterdam', 'Beget.com'];
-                        return redNodes.includes(node.id) ? 2 : 0.5;
-                    })
-                    .backgroundColor('#ffffff')
-                    .showNavInfo(false)
-                    .onNodeHover(node => {
-                        if (node) {
-                            const links = data.links.filter(link => 
-                                link.source.id === node.id || link.target.id === node.id
-                            );
-                            
-                            const connectedNodes = links.map(link => {
-                                const connectedId = link.source.id === node.id ? link.target.id : link.source.id;
-                                return `${link.type || 'Connected to'}: ${connectedId}`;
-                            });
-                            nodeInfo.innerHTML = `
-                                <strong>${node.id}</strong><br>
-                                <small>Type: ${node.type || 'Unknown'}</small><br>
-                                ${connectedNodes.length ? '<br>Connections:<br>' + connectedNodes.join('<br>') : ''}
-                            `;
-                            nodeInfo.style.display = 'block';
-                            
-                            document.addEventListener('mousemove', moveLabel);
-                        } else {
-                            nodeInfo.style.display = 'none';
-                            document.removeEventListener('mousemove', moveLabel);
-                        }
-                    })
-                    .onLinkHover(link => {
-                        if (link) {
-                            Graph
-                                .linkColor(l => l === link ? 'black' : 'rgba(0,0,0,1)')
-                                .linkWidth(l => l === link ? 0.5 : 0.5);
-                        } else {
-                            Graph
-                                .linkColor(() => 'rgba(0,0,0,1)')
-                                .linkWidth(0.5);
-                        }
-                    });
-
-                function moveLabel(event) {
-                    nodeInfo.style.left = (event.pageX + 10) + 'px';
-                    nodeInfo.style.top = (event.pageY + 10) + 'px';
+        // Highlighted nodes
+        const highlightedNodes = {
+            'currentglobalnews.site': '#FF6B6B',
+            '276 Tiffin St, Barrie, ON, L4N-2N4, CA': '#4ECDC4',
+            'Amsterdam, North Holland, NH, The Netherlands, NL': '#45B7D1',
+            'beget.com': '#96CEB4'
+        };
+        
+        const Graph = ForceGraph3D()
+            (document.getElementById('3d-graph'))
+            .graphData(${JSON.stringify(window.graphData)})
+            .linkColor(() => 'rgba(0,0,0,0.2)')
+            .linkWidth(1)
+            .linkDirectionalArrowLength(3.5)
+            .nodeColor(node => {
+                return highlightedNodes[node.id] || 'rgba(200,200,200,0.2)';
+            })
+            .nodeRelSize(node => {
+                return highlightedNodes[node.id] ? 8 : 4;
+            })
+            .backgroundColor('#ffffff')
+            .onNodeHover(node => {
+                if (node) {
+                    nodeInfo.innerHTML = `<strong>${node.id}</strong><br><small>Type: ${node.type || 'Unknown'}</small>`;
+                    nodeInfo.style.display = 'block';
+                    
+                    document.addEventListener('mousemove', moveLabel);
+                } else {
+                    nodeInfo.style.display = 'none';
+                    document.removeEventListener('mousemove', moveLabel);
                 }
             });
+
+        function moveLabel(event) {
+            nodeInfo.style.left = (event.pageX + 10) + 'px';
+            nodeInfo.style.top = (event.pageY + 10) + 'px';
+        }
+
+        // Center view on highlighted nodes
+        const highlightedNodeIds = Object.keys(highlightedNodes);
+        Graph.cameraPosition(
+            { x: 100, y: 100, z: 300 }, // new position
+            { x: 0, y: 0, z: 0 }, // lookAt
+            3000  // transition duration
+        );
     </script>
 </body>
 </html>
