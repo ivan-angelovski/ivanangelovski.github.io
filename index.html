@@ -53,7 +53,7 @@
                         highlightNodes.includes(node.id) ? 'red' : 'rgba(0,0,0,1)'
                     )
                     .nodeLabel(node => node.id) // Show labels on hover
-                    .nodeRelSize(1.5) // Slightly larger nodes
+                    .nodeRelSize(node => highlightNodes.includes(node.id) ? 2.5 : 1.5) // Larger nodes for highlighted
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
                     .d3Force('charge').strength(-100)
@@ -85,7 +85,8 @@
                             nodeEl.style.background = 'white';
                             nodeEl.style.padding = '2px 5px';
                             nodeEl.style.borderRadius = '3px';
-                            nodeEl.style.fontSize = '10px';
+                            nodeEl.style.fontSize = '12px';
+                            nodeEl.style.fontWeight = 'bold';
                             return new THREE.CSS2DObject(nodeEl);
                         }
                         return null;
