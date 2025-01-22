@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Network Visualization</title>
+    <title>Enhanced Network Visualization</title>
     <style>
         body { 
             margin: 0; 
@@ -11,72 +11,85 @@
             width: 100vw; 
             height: 100vh; 
         }
-        .node-label {
-            color: black;
-            background: rgba(255,255,255,0.9);
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(0,0,0,0.2);
-            font-size: 12px;
-            pointer-events: none;
+        .tooltip {
             position: absolute;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            border-radius: 5px;
+            pointer-events: none;
+            z-index: 10;
             display: none;
-            font-family: monospace;
         }
     </style>
     <script src="//unpkg.com/3d-force-graph"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script src="//threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="//threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="//threejs.org/examples/js/postprocessing/UnrealBloomPass.js"></script>
 </head>
 <body>
     <div id="3d-graph"></div>
-    <div id="node-info" class="node-label"></div>
+    <div id="tooltip" class="tooltip"></div>
 
     <script>
-        const nodeInfo = document.getElementById('node-info');
-        
         fetch('./network_data.json')
             .then(res => res.json())
             .then(data => {
+                const tooltip = document.getElementById('tooltip');
                 const Graph = ForceGraph3D()
                     (document.getElementById('3d-graph'))
                     .graphData(data)
-                    // Black lines
-                    .linkColor(() => 'rgba(0,0,0,1)')
+                    .linkColor(() => 'rgba(0,0,0,1)') // Black links
                     .linkWidth(1)
                     .linkDirectionalArrowLength(0)
-                    // Invisible nodes
-                    .nodeColor(() => 'rgba(0,0,0,1)')
-                    .nodeRelSize(1)
-                    // White background
+                    .nodeColor(node => node.highlighted ? '#ff0000' : 'rgba(0,0,0,1)')
+                    .nodeRelSize(0.5)
                     .backgroundColor('#ffffff')
-                    .showNavInfo(false)
-                    // Forces
-                    .d3Force('charge').strength(-100)
-                    .d3Force('link').distance(100)
-                    // Hover effects
                     .onNodeHover(node => {
                         if (node) {
-                            const links = data.links.filter(link => 
-                                link.source.id === node.id || link.target.id === node.id
-                            );
-                            
-                            nodeInfo.innerHTML = `
-                                <strong>${node.id}</strong><br>
-                                <small>Type: ${node.type || 'Unknown'}</small>
-                                ${links.map(link => `<br>→ ${link.target.id}`).join('')}
+                            node.highlighted = true;
+                            tooltip.style.left = `${event.clientX + 5}px`;
+                            tooltip.style.top = `${event.clientY + 5}px`;
+                            tooltip.style.display = 'block';
+                            tooltip.innerHTML = `
+                                <strong>ID:</strong> ${node.id}<br>
+                                <strong>Type:</strong> ${node.type}<br>
+                                <strong>Value:</strong> ${node.value || 'N/A'}
                             `;
-                            nodeInfo.style.display = 'block';
-                            
-                            document.addEventListener('mousemove', moveLabel);
                         } else {
-                            nodeInfo.style.display = 'none';
-                            document.removeEventListener('mousemove', moveLabel);
+                            tooltip.style.display = 'none';
+                            data.nodes.forEach(n => n.highlighted = false);
                         }
+                        Graph.nodeColor(Graph.nodeColor()); // Refresh colors
+                    })
+                    .onNodeClick(node => {
+                        // Center camera on the clicked node
+                        const distance = 40;
+                        const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+                        Graph.cameraPosition(
+                            { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+                            node,
+                            2000
+                        );
                     });
 
-                function moveLabel(event) {
-                    nodeInfo.style.left = (event.pageX + 10) + 'px';
-                    nodeInfo.style.top = (event.pageY + 10) + 'px';
-                }
+                // Add bloom effect
+                const bloomPass = new THREE.UnrealBloomPass(
+                    new THREE.Vector2(window.innerWidth, window.innerHeight),
+                    1.5, // Strength
+                    0.4, // Radius
+                    0.85 // Threshold
+                );
+                Graph.postProcessingComposer().addPass(bloomPass);
+
+                // Mouse movement for tooltip tracking
+                document.addEventListener('mousemove', event => {
+                    tooltip.style.left = `${event.clientX + 5}px`;
+                    tooltip.style.top = `${event.clientY + 5}px`;
+                });
             });
     </script>
 </body>
