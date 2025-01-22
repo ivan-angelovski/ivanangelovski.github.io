@@ -69,7 +69,7 @@
                     throw new Error('Invalid data format');
                 }
 
-               const Graph = ForceGraph3D()
+                const Graph = ForceGraph3D()
                     (document.getElementById('3d-graph'))
                     .graphData(data)
                     .linkColor(() => 'rgba(0,0,0,0.9)')
@@ -86,29 +86,59 @@
                     .cooldownTicks(100)
                     .d3Force('link', d3.forceLink()
                         .id(d => d.id)
-                        .distance(200)        // Increased distance
-                        .strength(0.2))      // Reduced strength for more freedom
+                        .distance(200)
+                        .strength(0.2))
                     .d3Force('charge', d3.forceManyBody()
-                        .strength(-300)      // Increased repulsion
+                        .strength(-300)
                         .theta(0.9)
-                        .distanceMax(500))   // Increased max distance
+                        .distanceMax(500))
                     .d3Force('center', d3.forceCenter())
-                    // Add an x, y, z positioning force
                     .d3Force('x', d3.forceX().strength(0.02))
                     .d3Force('y', d3.forceY().strength(0.02))
                     .d3Force('z', d3.forceZ().strength(0.02))
-                    .d3VelocityDecay(0.3);
-                
+                    .d3VelocityDecay(0.3)
+                    .onNodeHover(node => {
+                        if (node) {
+                            const links = data.links.filter(link => 
+                                link.source.id === node.id || link.target.id === node.id
+                            );
+                            
+                            const linkedNodes = links.reduce((acc, link) => {
+                                acc.add(link.source.id);
+                                acc.add(link.target.id);
+                                return acc;
+                            }, new Set());
+
+                            nodeInfo.innerHTML = `
+                                <strong>${node.id}</strong><br>
+                                <small>Type: ${node.type || 'Unknown'}</small>
+                                ${links.length > 0 ? '<br><br>Connected to:' : ''}
+                                ${Array.from(linkedNodes)
+                                    .filter(id => id !== node.id)
+                                    .map(id => `<br>→ ${id}`)
+                                    .join('')}
+                            `;
+                            nodeInfo.style.display = 'block';
+                            
+                            document.addEventListener('mousemove', moveLabel);
+                        } else {
+                            nodeInfo.style.display = 'none';
+                            document.removeEventListener('mousemove', moveLabel);
+                        }
+                    });
+
                 // Initialize with more spread out 3D positions
                 Graph.graphData({
                     nodes: data.nodes.map(node => ({
                         ...node,
-                        x: Math.random() * 200 - 100,  // Increased spread
+                        x: Math.random() * 200 - 100,
                         y: Math.random() * 200 - 100,
                         z: Math.random() * 200 - 100
                     })),
                     links: data.links
                 });
+
+            })
             .catch(error => {
                 console.error('Error loading or processing data:', error);
                 document.getElementById('3d-graph').innerHTML = 'Error loading visualization: ' + error.message;
