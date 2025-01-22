@@ -34,6 +34,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
+            z-index: 1000; /* Ensure button stays visible */
         }
         .nav-button:hover {
             background: #0056b3;
@@ -69,10 +70,10 @@
                     .linkWidth(1)
                     .linkDirectionalArrowLength(0)
                     .nodeColor(node =>
-                        highlightNodes.includes(node.id) ? 'red' : 'rgba(0,0,0,1)'
+                        highlightNodes.includes(node.id) ? 'red' : 'blue'
                     )
                     .nodeLabel(node => node.id) // Show labels on hover
-                    .nodeRelSize(node => highlightNodes.includes(node.id) ? 2.5 : 1.5) // Larger nodes for highlighted
+                    .nodeRelSize(node => highlightNodes.includes(node.id) ? 3 : 1.5) // Larger nodes for highlighted
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
                     .d3Force('charge').strength(-100)
