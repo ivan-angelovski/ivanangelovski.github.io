@@ -50,7 +50,7 @@
                         .linkDirectionalArrowLength(0)
                         .backgroundColor('#ffffff')
                         .nodeColor(node => highlightNodes.includes(node.id) ? 'red' : 'black')
-                        .nodeRelSize(node => highlightNodes.includes(node.id) ? 5 : 1) // Larger size for highlighted nodes
+                        .nodeRelSize(node => highlightNodes.includes(node.id) ? 10 : 5) // Larger size for highlighted nodes
                         .nodeLabel(node => node.id) // Display node ID as label on hover
                         .showNavInfo(false)
                         .d3Force('charge', d3.forceManyBody().strength(-100))
