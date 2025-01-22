@@ -52,7 +52,8 @@
                     .nodeColor(node =>
                         highlightNodes.includes(node.id) ? 'red' : 'rgba(0,0,0,1)'
                     )
-                    .nodeRelSize(1) // Adjust node size to be slightly larger
+                    .nodeLabel(node => node.id) // Show labels on hover
+                    .nodeRelSize(1.5) // Slightly larger nodes
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
                     .d3Force('charge').strength(-100)
@@ -75,6 +76,19 @@
                             nodeInfo.style.display = 'none';
                             document.removeEventListener('mousemove', moveLabel);
                         }
+                    })
+                    .nodeThreeObject(node => {
+                        if (highlightNodes.includes(node.id)) {
+                            const nodeEl = document.createElement('div');
+                            nodeEl.textContent = node.id;
+                            nodeEl.style.color = 'black';
+                            nodeEl.style.background = 'white';
+                            nodeEl.style.padding = '2px 5px';
+                            nodeEl.style.borderRadius = '3px';
+                            nodeEl.style.fontSize = '10px';
+                            return new THREE.CSS2DObject(nodeEl);
+                        }
+                        return null;
                     });
 
                 function moveLabel(event) {
