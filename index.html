@@ -23,15 +23,32 @@
             display: none;
             font-family: monospace;
         }
+        .nav-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            padding: 10px 15px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .nav-button:hover {
+            background: #0056b3;
+        }
     </style>
     <script src="//unpkg.com/3d-force-graph"></script>
 </head>
 <body>
+    <button class="nav-button" id="navigate-button">Next View</button>
     <div id="3d-graph"></div>
     <div id="node-info" class="node-label"></div>
 
     <script>
         const nodeInfo = document.getElementById('node-info');
+        const navigateButton = document.getElementById('navigate-button');
 
         const highlightNodes = [
             "currentglobalnews.site",
@@ -39,6 +56,8 @@
             "Amsterdam, North Holland, NH, The Netherlands, NL",
             "beget.com"
         ];
+
+        let currentViewIndex = -1;
 
         fetch('./network_data.json')
             .then(res => res.json())
@@ -96,6 +115,20 @@
                     nodeInfo.style.left = (event.pageX + 10) + 'px';
                     nodeInfo.style.top = (event.pageY + 10) + 'px';
                 }
+
+                navigateButton.addEventListener('click', () => {
+                    currentViewIndex = (currentViewIndex + 1) % highlightNodes.length;
+                    const targetNodeId = highlightNodes[currentViewIndex];
+                    const targetNode = data.nodes.find(node => node.id === targetNodeId);
+
+                    if (targetNode) {
+                        Graph.cameraPosition(
+                            { x: targetNode.x, y: targetNode.y, z: targetNode.z + 200 }, // New position
+                            targetNode, // Look-at position
+                            3000 // Animation duration in ms
+                        );
+                    }
+                });
             });
     </script>
 </body>
