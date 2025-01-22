@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Network</title>
+    <title>Network Visualization</title>
     <style>
         body { 
             margin: 0; 
@@ -22,6 +22,8 @@
             position: absolute;
             display: none;
             font-family: monospace;
+            max-width: 300px;
+            word-wrap: break-word;
         }
     </style>
     <script src="//unpkg.com/3d-force-graph"></script>
@@ -45,25 +47,40 @@
                 const Graph = ForceGraph3D()
                     (document.getElementById('3d-graph'))
                     .graphData(data)
-                    .linkColor(() => 'rgba(0,0,0,1)')
-                    .linkWidth(1)
-                    .linkDirectionalArrowLength(0)
-                    .nodeColor(node => highlightedNodes.includes(node.id) ? '#ff0000' : 'rgba(0,0,0,1)')
-                    .nodeRelSize(node => highlightedNodes.includes(node.id) ? 40 : 10)
+                    // Make links visible with black lines
+                    .linkColor(() => 'rgba(0,0,0,0.2)')
+                    .linkWidth(0.5)
+                    .linkDirectionalArrowLength(3)
+                    // Make nodes visible and color them based on highlight status
+                    .nodeColor(node => highlightedNodes.includes(node.id) ? '#FF0000' : '#666666')
+                    .nodeRelSize(4)
+                    // White background
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
-                    .d3Force('charge').strength(-100)
-                    .d3Force('link').distance(100)
+                    // Forces
+                    .d3Force('charge').strength(-120)
+                    .d3Force('link').distance(80)
+                    // Hover effects
                     .onNodeHover(node => {
                         if (node) {
                             const links = data.links.filter(link => 
                                 link.source.id === node.id || link.target.id === node.id
                             );
                             
+                            const linkedNodes = links.reduce((acc, link) => {
+                                acc.add(link.source.id);
+                                acc.add(link.target.id);
+                                return acc;
+                            }, new Set());
+
                             nodeInfo.innerHTML = `
                                 <strong>${node.id}</strong><br>
                                 <small>Type: ${node.type || 'Unknown'}</small>
-                                ${links.map(link => `<br>→ ${link.target.id}`).join('')}
+                                ${links.length > 0 ? '<br><br>Connected to:' : ''}
+                                ${Array.from(linkedNodes)
+                                    .filter(id => id !== node.id)
+                                    .map(id => `<br>→ ${id}`)
+                                    .join('')}
                             `;
                             nodeInfo.style.display = 'block';
                             
@@ -75,8 +92,17 @@
                     });
 
                 function moveLabel(event) {
-                    nodeInfo.style.left = (event.pageX + 10) + 'px';
-                    nodeInfo.style.top = (event.pageY + 10) + 'px';
+                    const x = event.pageX + 10;
+                    const y = event.pageY + 10;
+                    
+                    // Keep the label within the window bounds
+                    const labelWidth = nodeInfo.offsetWidth;
+                    const labelHeight = nodeInfo.offsetHeight;
+                    const windowWidth = window.innerWidth;
+                    const windowHeight = window.innerHeight;
+                    
+                    nodeInfo.style.left = Math.min(x, windowWidth - labelWidth - 10) + 'px';
+                    nodeInfo.style.top = Math.min(y, windowHeight - labelHeight - 10) + 'px';
                 }
             });
     </script>
