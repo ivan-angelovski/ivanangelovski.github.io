@@ -1,73 +1,83 @@
-import React, { useEffect, useRef } from 'react';
-import ForceGraph3D from '3d-force-graph';
-
-const NetworkVisualization = () => {
-  const containerRef = useRef();
-  
-  useEffect(() => {
-    // Initialize data from network_data.json
-    const { nodes, links } = window.network_data;
-    
-    // List of nodes to highlight in red
-    const highlightNodes = [
-      'currentglobalnews.site',
-      '276 Tiffin St, Barrie, ON, L4N-2N4, CA',
-      'Amsterdam, North Holland, NH, The Netherlands, NL',
-      'beget.com'
-    ];
-
-    const gData = {
-      nodes: nodes.map(node => ({
-        ...node,
-        color: highlightNodes.includes(node.id) ? '#FF0000' : '#808080'
-      })),
-      links
-    };
-
-    // Create the force graph
-    const Graph = ForceGraph3D()(containerRef.current)
-      .graphData(gData)
-      .linkColor(() => '#999999')
-      .linkWidth(1)
-      .linkDirectionalArrowLength(3.5)
-      .nodeRelSize(6)
-      .nodeOpacity(1)
-      .linkOpacity(0.4)
-      .backgroundColor('#FFFFFF')
-      .showNavInfo(false);
-
-    // Set initial camera position for better view
-    Graph.cameraPosition({ x: 1000, y: 1000, z: 1000 });
-
-    // Add hover effects
-    Graph
-      .onNodeHover(node => {
-        if (node) {
-          containerRef.current.style.cursor = 'pointer';
-        } else {
-          containerRef.current.style.cursor = 'default';
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Network Visualization</title>
+    <style>
+        body { 
+            margin: 0; 
+            background: #ffffff;
         }
-      })
-      .onNodeClick(node => {
-        if (node) {
-          // Look at the clicked node
-          const distance = 300;
-          const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
-          Graph.cameraPosition(
-            { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
-            node,
-            1000
-          );
+        canvas { 
+            width: 100vw; 
+            height: 100vh; 
         }
-      });
+        .node-label {
+            color: black;
+            background: rgba(255,255,255,0.9);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.2);
+            font-size: 12px;
+            pointer-events: none;
+            position: absolute;
+            display: none;
+            font-family: monospace;
+        }
+    </style>
+    <script src="//unpkg.com/3d-force-graph"></script>
+</head>
+<body>
+    <div id="3d-graph"></div>
+    <div id="node-info" class="node-label"></div>
 
-    // Cleanup on unmount
-    return () => Graph._destructor();
-  }, []);
+    <script>
+        const nodeInfo = document.getElementById('node-info');
+        
+        fetch('./network_data.json')
+            .then(res => res.json())
+            .then(data => {
+                const Graph = ForceGraph3D()
+                    (document.getElementById('3d-graph'))
+                    .graphData(data)
+                    // Black lines
+                    .linkColor(() => 'rgba(0,0,0,1)')
+                    .linkWidth(1)
+                    .linkDirectionalArrowLength(0)
+                    // Invisible nodes
+                    .nodeColor(() => 'rgba(0,0,0,1)')
+                    .nodeRelSize(1)
+                    // White background
+                    .backgroundColor('#ffffff')
+                    .showNavInfo(false)
+                    // Forces
+                    .d3Force('charge').strength(-100)
+                    .d3Force('link').distance(100)
+                    // Hover effects
+                    .onNodeHover(node => {
+                        if (node) {
+                            const links = data.links.filter(link => 
+                                link.source.id === node.id || link.target.id === node.id
+                            );
+                            
+                            nodeInfo.innerHTML = `
+                                <strong>${node.id}</strong><br>
+                                <small>Type: ${node.type || 'Unknown'}</small>
+                                ${links.map(link => `<br>→ ${link.target.id}`).join('')}
+                            `;
+                            nodeInfo.style.display = 'block';
+                            
+                            document.addEventListener('mousemove', moveLabel);
+                        } else {
+                            nodeInfo.style.display = 'none';
+                            document.removeEventListener('mousemove', moveLabel);
+                        }
+                    });
 
-  return (
-    <div className="w-full h-screen" ref={containerRef}></div>
-  );
-};
-
-export default NetworkVisualization;
+                function moveLabel(event) {
+                    nodeInfo.style.left = (event.pageX + 10) + 'px';
+                    nodeInfo.style.top = (event.pageY + 10) + 'px';
+                }
+            });
+    </script>
+</body>
+</html>
