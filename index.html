@@ -39,97 +39,87 @@
             background: #0056b3;
         }
     </style>
-    <script src="//unpkg.com/3d-force-graph"></script>
+    <script src="https://unpkg.com/3d-force-graph"></script>
 </head>
 <body>
     <button class="nav-button" id="navigate-button">Next View</button>
     <div id="3d-graph"></div>
 
     <script>
-        const navigateButton = document.getElementById('navigate-button');
-        const highlightNodes = [
-            "currentglobalnews.site",
-            "276 Tiffin St, Barrie, ON, L4N-2N4, CA",
-            "Amsterdam, North Holland, NH, The Netherlands, NL",
-            "beget.com"
-        ];
+        document.addEventListener('DOMContentLoaded', () => {
+            const navigateButton = document.getElementById('navigate-button');
+            if (!navigateButton) {
+                console.error("Navigate button not found!");
+                return;
+            }
 
-        let currentViewIndex = -1;
-        let graph;
+            const highlightNodes = [
+                "currentglobalnews.site",
+                "276 Tiffin St, Barrie, ON, L4N-2N4, CA",
+                "Amsterdam, North Holland, NH, The Netherlands, NL",
+                "beget.com"
+            ];
 
-        fetch('./network_data.json')
-            .then(res => res.json())
-            .then(data => {
-                graph = ForceGraph3D()
-                    (document.getElementById('3d-graph'))
-                    .graphData(data)
-                    .linkColor(() => 'rgba(0,0,0,1)')
-                    .linkWidth(1)
-                    .linkDirectionalArrowLength(0)
-                    .nodeColor(() => 'black') // All nodes are black
-                    .nodeLabel(node => node.id) // Show labels on hover
-                    .nodeRelSize(1.5) // Uniform node size
-                    .backgroundColor('#ffffff')
-                    .showNavInfo(false)
-                    .d3Force('charge').strength(-100)
-                    .d3Force('link').distance(100)
-                    .nodeThreeObject(node => {
-                        const nodeEl = document.createElement('div');
-                        if (highlightNodes.includes(node.id)) {
-                            nodeEl.textContent = node.id;
-                            nodeEl.style.color = 'black';
-                            nodeEl.style.background = 'white';
-                            nodeEl.style.padding = '2px 5px';
-                            nodeEl.style.borderRadius = '3px';
-                            nodeEl.style.fontSize = '12px';
-                            nodeEl.style.fontWeight = 'bold';
-                            nodeEl.style.position = 'absolute';
-                            nodeEl.style.pointerEvents = 'none';
+            let currentViewIndex = -1;
+            let graph;
 
-                            // Create and add label as a permanent element in the scene
-                            const label = new THREE.CSS2DObject(nodeEl);
-                            label.position.set(node.x, node.y, node.z); // Set label position to the node's coordinates
-                            graph.scene().add(label);
+            fetch('./network_data.json')
+                .then(res => res.json())
+                .then(data => {
+                    graph = ForceGraph3D()
+                        (document.getElementById('3d-graph'))
+                        .graphData(data)
+                        .linkColor(() => 'rgba(0,0,0,1)')
+                        .linkWidth(1)
+                        .linkDirectionalArrowLength(0)
+                        .nodeColor(() => 'black')
+                        .nodeLabel(node => node.id)
+                        .nodeRelSize(1.5)
+                        .backgroundColor('#ffffff')
+                        .showNavInfo(false)
+                        .d3Force('charge', d3.forceManyBody().strength(-100)) // Correct d3Force setup
+                        .d3Force('link', d3.forceLink().distance(100)) // Correct link force setup
+                        .nodeThreeObject(node => {
+                            const nodeEl = document.createElement('div');
+                            if (highlightNodes.includes(node.id)) {
+                                nodeEl.textContent = node.id;
+                                nodeEl.style.color = 'black';
+                                nodeEl.style.background = 'white';
+                                nodeEl.style.padding = '2px 5px';
+                                nodeEl.style.borderRadius = '3px';
+                                nodeEl.style.fontSize = '12px';
+                                nodeEl.style.fontWeight = 'bold';
+                                nodeEl.style.position = 'absolute';
+                                nodeEl.style.pointerEvents = 'none';
+
+                                // Create and add label as a permanent element in the scene
+                                const label = new THREE.CSS2DObject(nodeEl);
+                                label.position.set(node.x, node.y, node.z); // Position label at node coordinates
+                                graph.scene().add(label);
+                            }
+                            return null; // Avoid replacing the default 3D node visualization
+                        });
+
+                    // Ensure the "Next View" button works...
+                    navigateButton.addEventListener('click', () => {
+                        currentViewIndex = (currentViewIndex + 1) % highlightNodes.length;
+                        const targetNodeId = highlightNodes[currentViewIndex];
+                        const targetNode = data.nodes.find(node => node.id === targetNodeId);
+
+                        if (targetNode) {
+                            // Zoom in on the selected node
+                            graph.cameraPosition(
+                                { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 + 200 }, // New position with zoom
+                                { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 }, // Look-at position
+                                1000 // Animation duration in ms
+                            );
                         }
-                        return null; // Avoid replacing the default 3D node visualization
                     });
-
-                // Ensure permanent labels for highlighted nodes
-                data.nodes.forEach(node => {
-                    if (highlightNodes.includes(node.id)) {
-                        const nodeEl = document.createElement('div');
-                        nodeEl.textContent = node.id;
-                        nodeEl.style.color = 'black';
-                        nodeEl.style.background = 'white';
-                        nodeEl.style.padding = '2px 5px';
-                        nodeEl.style.borderRadius = '3px';
-                        nodeEl.style.fontSize = '12px';
-                        nodeEl.style.fontWeight = 'bold';
-                        nodeEl.style.position = 'absolute';
-                        nodeEl.style.pointerEvents = 'none';
-
-                        const label = new THREE.CSS2DObject(nodeEl);
-                        label.position.set(node.x, node.y, node.z); // Position label at node coordinates
-                        graph.scene().add(label);
-                    }
+                })
+                .catch(error => {
+                    console.error("Error loading the network data:", error);
                 });
-
-                // Handle the "Next View" button functionality
-                navigateButton.addEventListener('click', () => {
-                    currentViewIndex = (currentViewIndex + 1) % highlightNodes.length;
-                    const targetNodeId = highlightNodes[currentViewIndex];
-                    const targetNode = data.nodes.find(node => node.id === targetNodeId);
-
-                    if (targetNode) {
-                        // Zoom in on the selected node
-                        graph.cameraPosition(
-                            { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 + 200 }, // New position with zoom
-                            { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 }, // Look-at position
-                            1000 // Animation duration in ms
-                        );
-                    }
-                });
-            });
+        });
     </script>
 </body>
 </html>
