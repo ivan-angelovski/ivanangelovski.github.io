@@ -52,7 +52,7 @@
                     .nodeColor(node =>
                         highlightNodes.includes(node.id) ? 'red' : 'rgba(0,0,0,1)'
                     )
-                    .nodeRelSize(0.5) // Smaller nodes
+                    .nodeRelSize(1) // Adjust node size to be slightly larger
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
                     .d3Force('charge').strength(-100)
@@ -60,13 +60,13 @@
                     .onNodeHover(node => {
                         if (node) {
                             const links = data.links.filter(link => 
-                                link.source.id === node.id || link.target.id === node.id
+                                link.source === node.id || link.target === node.id
                             );
 
                             nodeInfo.innerHTML = `
                                 <strong>${node.id}</strong><br>
                                 <small>Type: ${node.type || 'Unknown'}</small>
-                                ${links.map(link => `<br>→ ${link.source.id === node.id ? link.target.id : link.source.id}`).join('')}
+                                ${links.map(link => `<br>→ ${link.source === node.id ? link.target : link.source}`).join('')}
                             `;
                             nodeInfo.style.display = 'block';
 
