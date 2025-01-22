@@ -39,14 +39,14 @@
                         .linkColor(() => 'rgba(0,0,0,1)')
                         .linkWidth(1)
                         .linkDirectionalArrowLength(0)
-                        .nodeRelSize(1.5)
                         .backgroundColor('#ffffff')
                         .showNavInfo(false)
                         .d3Force('charge', d3.forceManyBody().strength(-100))
                         .d3Force('link', d3.forceLink().distance(100));
 
-                    // Highlight specified nodes by coloring them red
+                    // Adjust node size and color for highlighted nodes
                     graph.nodeColor(node => highlightNodes.includes(node.id) ? 'red' : 'black');
+                    graph.nodeRelSize(node => highlightNodes.includes(node.id) ? 3 : 1);  // Larger size for highlighted nodes
                 })
                 .catch(error => {
                     console.error("Error loading the network data:", error);
