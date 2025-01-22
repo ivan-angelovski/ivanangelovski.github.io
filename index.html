@@ -69,34 +69,13 @@
                     .linkColor(() => 'rgba(0,0,0,1)')
                     .linkWidth(1)
                     .linkDirectionalArrowLength(0)
-                    .nodeColor(node =>
-                        highlightNodes.includes(node.id) ? 'red' : 'blue'
-                    )
+                    .nodeColor(() => 'blue') // All nodes are blue
                     .nodeLabel(node => node.id) // Show labels on hover
-                    .nodeRelSize(node => highlightNodes.includes(node.id) ? 3 : 1.5) // Larger nodes for highlighted
+                    .nodeRelSize(1.5) // Uniform node size
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
                     .d3Force('charge').strength(-100)
                     .d3Force('link').distance(100)
-                    .onNodeHover(node => {
-                        if (node) {
-                            const links = data.links.filter(link => 
-                                link.source === node.id || link.target === node.id
-                            );
-
-                            nodeInfo.innerHTML = `
-                                <strong>${node.id}</strong><br>
-                                <small>Type: ${node.type || 'Unknown'}</small>
-                                ${links.map(link => `<br>→ ${link.source === node.id ? link.target : link.source}`).join('')}
-                            `;
-                            nodeInfo.style.display = 'block';
-
-                            document.addEventListener('mousemove', moveLabel);
-                        } else {
-                            nodeInfo.style.display = 'none';
-                            document.removeEventListener('mousemove', moveLabel);
-                        }
-                    })
                     .nodeThreeObject(node => {
                         if (highlightNodes.includes(node.id)) {
                             const nodeEl = document.createElement('div');
@@ -111,11 +90,6 @@
                         }
                         return null;
                     });
-
-                function moveLabel(event) {
-                    nodeInfo.style.left = (event.pageX + 10) + 'px';
-                    nodeInfo.style.top = (event.pageY + 10) + 'px';
-                }
 
                 navigateButton.addEventListener('click', () => {
                     currentViewIndex = (currentViewIndex + 1) % highlightNodes.length;
