@@ -52,7 +52,7 @@
                     .nodeColor(node =>
                         highlightNodes.includes(node.id) ? 'red' : 'rgba(0,0,0,1)'
                     )
-                    .nodeRelSize(3) // Smaller nodes
+                    .nodeRelSize(0.5) // Smaller nodes
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
                     .d3Force('charge').strength(-100)
@@ -66,7 +66,7 @@
                             nodeInfo.innerHTML = `
                                 <strong>${node.id}</strong><br>
                                 <small>Type: ${node.type || 'Unknown'}</small>
-                                ${links.map(link => `<br>→ ${link.target.id}`).join('')}
+                                ${links.map(link => `<br>→ ${link.source.id === node.id ? link.target.id : link.source.id}`).join('')}
                             `;
                             nodeInfo.style.display = 'block';
 
