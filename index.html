@@ -44,24 +44,25 @@
                     .nodeColor(node => {
                         // List of nodes to highlight in red
                         const redNodes = ['currentglobalnews.site', 'Barrie', 'Amsterdam', 'Beget.com'];
-                        return redNodes.includes(node.id) ? 'red' : 'rgba(0,0,0,1)';
+                        return redNodes.includes(node.id) ? '#FF0000' : 'rgba(0,0,0,1)';
                     })
-                    .nodeRelSize(0.5)
+                    .nodeRelSize(node => {
+                        // Make highlighted nodes larger
+                        const redNodes = ['currentglobalnews.site', 'Barrie', 'Amsterdam', 'Beget.com'];
+                        return redNodes.includes(node.id) ? 2 : 0.5;
+                    })
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
                     .onNodeHover(node => {
                         if (node) {
-                            // Find connected nodes
                             const links = data.links.filter(link => 
                                 link.source.id === node.id || link.target.id === node.id
                             );
                             
-                            // Create info text
                             const connectedNodes = links.map(link => {
                                 const connectedId = link.source.id === node.id ? link.target.id : link.source.id;
                                 return `${link.type || 'Connected to'}: ${connectedId}`;
                             });
-                            // Display info
                             nodeInfo.innerHTML = `
                                 <strong>${node.id}</strong><br>
                                 <small>Type: ${node.type || 'Unknown'}</small><br>
@@ -69,14 +70,12 @@
                             `;
                             nodeInfo.style.display = 'block';
                             
-                            // Follow mouse
                             document.addEventListener('mousemove', moveLabel);
                         } else {
                             nodeInfo.style.display = 'none';
                             document.removeEventListener('mousemove', moveLabel);
                         }
                     })
-                    // Highlight connections on hover
                     .onLinkHover(link => {
                         if (link) {
                             Graph
@@ -88,7 +87,7 @@
                                 .linkWidth(0.5);
                         }
                     });
-                // Function to move info label with cursor
+
                 function moveLabel(event) {
                     nodeInfo.style.left = (event.pageX + 10) + 'px';
                     nodeInfo.style.top = (event.pageY + 10) + 'px';
