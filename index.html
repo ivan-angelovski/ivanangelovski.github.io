@@ -32,6 +32,12 @@
 
     <script>
         const nodeInfo = document.getElementById('node-info');
+        const highlightNodes = [
+            'currentglobalnews.site',
+            '276 Tiffin St, Barrie, ON, L4N-2N4, CA',
+            'Amsterdam, North Holland, NH, The Netherlands, NL',
+            'beget.com'
+        ];
         
         fetch('./network_data.json')
             .then(res => res.json())
@@ -40,12 +46,12 @@
                     (document.getElementById('3d-graph'))
                     .graphData(data)
                     // Black lines
-                    .linkColor(() => 'rgba(0,0,0,1)')
-                    .linkWidth(1)
+                    .linkColor(() => 'rgba(0,0,0,0.2)')
+                    .linkWidth(0.5)
                     .linkDirectionalArrowLength(0)
-                    // Invisible nodes
-                    .nodeColor(() => 'rgba(0,0,0,1)')
-                    .nodeRelSize(1)
+                    // Make nodes visible and color them
+                    .nodeColor(node => highlightNodes.includes(node.id) ? '#ff0000' : '#666666')
+                    .nodeRelSize(4)
                     // White background
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
