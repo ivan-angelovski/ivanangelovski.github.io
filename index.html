@@ -81,8 +81,8 @@
                     .backgroundColor('#ffffff')
                     .showNavInfo(true)
                     // Changed force configuration
-                    .d3Force('charge', d3.forceManyBody().strength(5))
-                    .d3Force('link', d3.forceLink().distance(50))
+                    .d3Force('charge', d3.forceManyBody().strength(-5))
+                    .d3Force('link', d3.forceLink().distance(80))
                     .onNodeHover(node => {
                         if (node) {
                             const links = data.links.filter(link => 
