@@ -20,7 +20,6 @@
             font-size: 12px;
             pointer-events: none;
             position: absolute;
-            display: none;
             font-family: monospace;
         }
         .nav-button {
@@ -43,12 +42,10 @@
     <script src="//unpkg.com/3d-force-graph"></script>
 </head>
 <body>
-    <button class="nav-button" id="navigate-button">Next</button>
+    <button class="nav-button" id="navigate-button">Next View</button>
     <div id="3d-graph"></div>
-    <div id="node-info" class="node-label"></div>
 
     <script>
-        const nodeInfo = document.getElementById('node-info');
         const navigateButton = document.getElementById('navigate-button');
 
         const highlightNodes = [
@@ -59,11 +56,12 @@
         ];
 
         let currentViewIndex = -1;
+        let graph;
 
         fetch('./network_data.json')
             .then(res => res.json())
             .then(data => {
-                const Graph = ForceGraph3D()
+                graph = ForceGraph3D()
                     (document.getElementById('3d-graph'))
                     .graphData(data)
                     .linkColor(() => 'rgba(0,0,0,1)')
@@ -77,8 +75,8 @@
                     .d3Force('charge').strength(-100)
                     .d3Force('link').distance(100)
                     .nodeThreeObject(node => {
+                        const nodeEl = document.createElement('div');
                         if (highlightNodes.includes(node.id)) {
-                            const nodeEl = document.createElement('div');
                             nodeEl.textContent = node.id;
                             nodeEl.style.color = 'black';
                             nodeEl.style.background = 'white';
@@ -86,32 +84,16 @@
                             nodeEl.style.borderRadius = '3px';
                             nodeEl.style.fontSize = '12px';
                             nodeEl.style.fontWeight = 'bold';
-                            nodeEl.style.position = 'absolute'; // Position it on the node
+                            nodeEl.style.position = 'absolute';
                             nodeEl.style.pointerEvents = 'none'; // Disable interactions with the label
-                            return new THREE.CSS2DObject(nodeEl);
+                            
+                            // Create and add label as a permanent element in the scene
+                            const label = new THREE.CSS2DObject(nodeEl);
+                            label.position.set(node.x, node.y, node.z); // Set label position to the node's coordinates
+                            graph.scene().add(label);
                         }
-                        return null;
+                        return null; // Avoid replacing the default 3D node visualization
                     });
-
-                // Ensure that highlighted nodes are always labeled
-                highlightNodes.forEach(nodeId => {
-                    const targetNode = data.nodes.find(node => node.id === nodeId);
-                    if (targetNode) {
-                        const nodeEl = document.createElement('div');
-                        nodeEl.textContent = nodeId;
-                        nodeEl.style.color = 'black';
-                        nodeEl.style.background = 'white';
-                        nodeEl.style.padding = '2px 5px';
-                        nodeEl.style.borderRadius = '3px';
-                        nodeEl.style.fontSize = '12px';
-                        nodeEl.style.fontWeight = 'bold';
-                        nodeEl.style.position = 'absolute';
-                        nodeEl.style.pointerEvents = 'none';
-                        const label = new THREE.CSS2DObject(nodeEl);
-                        Graph.scene().add(label);
-                        label.position.set(targetNode.x, targetNode.y, targetNode.z);
-                    }
-                });
 
                 // Handle the "Next View" button functionality
                 navigateButton.addEventListener('click', () => {
@@ -120,10 +102,10 @@
                     const targetNode = data.nodes.find(node => node.id === targetNodeId);
 
                     if (targetNode) {
-                        Graph.cameraPosition(
-                            { x: targetNode.x || 0, y: targetNode.y || 0, z: (targetNode.z || 0) + 200 }, // New position with zoom
+                        graph.cameraPosition(
+                            { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 + 200 }, // New position with zoom
                             { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 }, // Look-at position
-                            3000 // Animation duration in ms
+                            2000 // Animation duration in ms
                         );
                     }
                 });
