@@ -34,7 +34,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
-            z-index: 1000; /* Ensure button stays visible */
+            z-index: 1000;
         }
         .nav-button:hover {
             background: #0056b3;
@@ -51,6 +51,7 @@
         const nodeInfo = document.getElementById('node-info');
         const navigateButton = document.getElementById('navigate-button');
 
+        // Reordered array according to the requested sequence
         const highlightNodes = [
             "currentglobalnews.site",
             "276 Tiffin St, Barrie, ON, L4N-2N4, CA",
@@ -69,9 +70,9 @@
                     .linkColor(() => 'rgba(0,0,0,1)')
                     .linkWidth(1)
                     .linkDirectionalArrowLength(0)
-                    .nodeColor(() => 'black') // All nodes are black
-                    .nodeLabel(node => node.id) // Show labels on hover
-                    .nodeRelSize(1.5) // Uniform node size
+                    .nodeColor(node => highlightNodes.includes(node.id) ? '#FF4500' : 'black') // Highlight important nodes
+                    .nodeLabel(node => node.id)
+                    .nodeRelSize(node => highlightNodes.includes(node.id) ? 2.5 : 1.5) // Larger size for highlighted nodes
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
                     .d3Force('charge').strength(-100)
@@ -81,15 +82,30 @@
                             const nodeEl = document.createElement('div');
                             nodeEl.textContent = node.id;
                             nodeEl.style.color = 'black';
-                            nodeEl.style.background = 'white';
-                            nodeEl.style.padding = '2px 5px';
-                            nodeEl.style.borderRadius = '3px';
+                            nodeEl.style.background = 'rgba(255, 255, 255, 0.9)';
+                            nodeEl.style.padding = '4px 8px';
+                            nodeEl.style.borderRadius = '4px';
                             nodeEl.style.fontSize = '12px';
                             nodeEl.style.fontWeight = 'bold';
+                            nodeEl.style.border = '1px solid rgba(0,0,0,0.2)';
+                            nodeEl.style.pointerEvents = 'none';
                             return new THREE.CSS2DObject(nodeEl);
                         }
                         return null;
                     });
+
+                // Add CSS2D renderer for the labels
+                const labelRenderer = new THREE.CSS2DRenderer();
+                labelRenderer.setSize(window.innerWidth, window.innerHeight);
+                labelRenderer.domElement.style.position = 'absolute';
+                labelRenderer.domElement.style.top = '0px';
+                labelRenderer.domElement.style.pointerEvents = 'none';
+                document.body.appendChild(labelRenderer.domElement);
+
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+                });
 
                 navigateButton.addEventListener('click', () => {
                     currentViewIndex = (currentViewIndex + 1) % highlightNodes.length;
@@ -98,7 +114,7 @@
 
                     if (targetNode) {
                         Graph.cameraPosition(
-                            { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 + 200 }, // New position
+                            { x: targetNode.x || 0, y: targetNode.y || 0, z: (targetNode.z || 0) + 200 }, // New position
                             { x: targetNode.x || 0, y: targetNode.y || 0, z: targetNode.z || 0 }, // Look-at position
                             3000 // Animation duration in ms
                         );
