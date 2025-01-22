@@ -46,12 +46,12 @@
                     (document.getElementById('3d-graph'))
                     .graphData(data)
                     // Black lines
-                    .linkColor(() => 'rgba(0,0,0,0.2)')
+                    .linkColor(() => 'rgba(0,0,0,1)')
                     .linkWidth(0.5)
                     .linkDirectionalArrowLength(0)
                     // Make nodes visible and color them
-                    .nodeColor(node => highlightNodes.includes(node.id) ? '#ff0000' : '#666666')
-                    .nodeRelSize(4)
+                    .nodeColor(node => highlightNodes.includes(node.id) ? '#ff0000' : '#000000')
+                    .nodeRelSize(node => highlightNodes.includes(node.id) ? 14 : 4)
                     // White background
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
