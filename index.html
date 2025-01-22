@@ -1,68 +1,91 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Network Visualization</title>
     <style>
-        body {
-            margin: 0;
+        body { 
+            margin: 0; 
             background: #ffffff;
         }
-        canvas {
-            width: 100vw;
-            height: 100vh;
+        canvas { 
+            width: 100vw; 
+            height: 100vh; 
+        }
+        .node-label {
+            color: black;
+            background: rgba(255,255,255,0.9);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.2);
+            font-size: 12px;
+            pointer-events: none;
+            position: absolute;
+            display: none;
+            font-family: monospace;
         }
     </style>
-    <!-- Include D3.js -->
-    <script src="https://d3js.org/d3.v6.min.js"></script>
-    <!-- Include 3D Force Graph -->
-    <script src="https://unpkg.com/3d-force-graph"></script>
+    <script src="//unpkg.com/3d-force-graph"></script>
 </head>
 <body>
     <div id="3d-graph"></div>
+    <div id="node-info" class="node-label"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+          document.addEventListener('DOMContentLoaded', function () {
             const highlightNodes = [
                 "currentglobalnews.site",
                 "276 Tiffin St, Barrie, ON, L4N-2N4, CA",
                 "Amsterdam, North Holland, NH, The Netherlands, NL",
                 "beget.com"
             ];
-
-            // Fetch network data and initialize the graph
-            fetch('./network_data.json')
-                .then(res => res.json())
-                .then(data => {
-                    // Make sure each node has x, y, z properties, otherwise set default values
-                    data.nodes.forEach(node => {
-                        if (node.x === undefined || isNaN(node.x)) node.x = Math.random() * 500 - 250; // Set random position if not available or NaN
-                        if (node.y === undefined || isNaN(node.y)) node.y = Math.random() * 500 - 250;
-                        if (node.z === undefined || isNaN(node.z)) node.z = Math.random() * 500 - 250;
+        const nodeInfo = document.getElementById('node-info');
+        
+        fetch('./network_data.json')
+            .then(res => res.json())
+            .then(data => {
+                const Graph = ForceGraph3D()
+                    (document.getElementById('3d-graph'))
+                    .graphData(data)
+                    // Black lines
+                    .linkColor(() => 'rgba(0,0,0,1)')
+                    .linkWidth(1)
+                    .linkDirectionalArrowLength(0)
+                    // Invisible nodes
+                    .nodeColor(node => highlightNodes.includes(node.id) ? 'red' : 'black')
+                    .nodeRelSize(node => highlightNodes.includes(node.id) ? 10 : 5) // Larger size for highlighted nodes
+                    // White background
+                    .backgroundColor('#ffffff')
+                    .showNavInfo(false)
+                    // Forces
+                    .d3Force('charge').strength(-100)
+                    .d3Force('link').distance(100)
+                    // Hover effects
+                    .onNodeHover(node => {
+                        if (node) {
+                            const links = data.links.filter(link => 
+                                link.source.id === node.id || link.target.id === node.id
+                            );
+                            
+                            nodeInfo.innerHTML = `
+                                <strong>${node.id}</strong><br>
+                                <small>Type: ${node.type || 'Unknown'}</small>
+                                ${links.map(link => `<br>→ ${link.target.id}`).join('')}
+                            `;
+                            nodeInfo.style.display = 'block';
+                            
+                            document.addEventListener('mousemove', moveLabel);
+                        } else {
+                            nodeInfo.style.display = 'none';
+                            document.removeEventListener('mousemove', moveLabel);
+                        }
                     });
 
-                    const graph = ForceGraph3D()
-                        (document.getElementById('3d-graph'))
-                        .graphData(data)
-                        .linkColor(() => 'rgba(0,0,0,1)')
-                        .linkWidth(1)
-                        .linkDirectionalArrowLength(0)
-                        .backgroundColor('#ffffff')
-                        .nodeColor(node => highlightNodes.includes(node.id) ? 'red' : 'black')
-                        .nodeRelSize(node => highlightNodes.includes(node.id) ? 10 : 5) // Larger size for highlighted nodes
-                        .nodeLabel(node => node.id) // Display node ID as label on hover
-                        .showNavInfo(false)
-                        .d3Force('charge', d3.forceManyBody().strength(-100))
-                        .d3Force('link', d3.forceLink().distance(100));
-
-                    // Optional: Log node positions to ensure they have valid values
-                    console.log("Node positions:", data.nodes);
-                })
-                .catch(error => {
-                    console.error("Error loading the network data:", error);
-                });
-        });
+                function moveLabel(event) {
+                    nodeInfo.style.left = (event.pageX + 10) + 'px';
+                    nodeInfo.style.top = (event.pageY + 10) + 'px';
+                }
+            });
     </script>
 </body>
 </html>
