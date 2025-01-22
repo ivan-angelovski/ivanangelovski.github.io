@@ -69,7 +69,6 @@
                     throw new Error('Invalid data format');
                 }
 
-                // Initialize the graph
                 const Graph = ForceGraph3D()
                     (document.getElementById('3d-graph'))
                     .graphData(data)
@@ -80,14 +79,21 @@
                     .nodeRelSize(4)
                     .backgroundColor('#ffffff')
                     .showNavInfo(false)
-                    // Force configuration
+                    // Smooth movement configuration
+                    .enableNodeDrag(true)
+                    .enableNavigationControls(true)
+                    .warmupTicks(100)
+                    .cooldownTicks(100)
                     .d3Force('link', d3.forceLink()
                         .id(d => d.id)
-                        .distance(80))
+                        .distance(100)
+                        .strength(0.3))
                     .d3Force('charge', d3.forceManyBody()
-                        .strength(-50)
-                        .distanceMax(100))
+                        .strength(-150)
+                        .theta(0.9)
+                        .distanceMax(300))
                     .d3Force('center', d3.forceCenter())
+                    .d3VelocityDecay(0.3)
                     .onNodeHover(node => {
                         if (node) {
                             const links = data.links.filter(link => 
@@ -118,13 +124,13 @@
                         }
                     });
 
-                // Add some initial 3D spread
+                // Initial 3D spread
                 Graph.graphData({
                     nodes: data.nodes.map(node => ({
                         ...node,
-                        x: Math.random() * 100 - 50,
-                        y: Math.random() * 100 - 50,
-                        z: Math.random() * 100 - 50
+                        x: Math.random() * 50 - 25,
+                        y: Math.random() * 50 - 25,
+                        z: Math.random() * 50 - 25
                     })),
                     links: data.links
                 });
